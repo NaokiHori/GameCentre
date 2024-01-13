@@ -1,0 +1,47 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+
+  deploy:
+    name: Deploy page
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Setup node
+        uses: actions/setup-node@main
+      - name: Install TS and build
+        run: |
+          npm install -g typescript && tsc
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@main
+      - name: Wrap-up elements
+        run: |
+          mkdir package
+          cp -r \
+            built css index.html \
+            package
+      - name: Upload HTML
+        uses: actions/upload-pages-artifact@main
+        with:
+          path: package
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main
+
