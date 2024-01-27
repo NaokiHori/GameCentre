@@ -1,0 +1,28 @@
+/* parent div element storing the modes */
+#modes {
+  width: var(--board-width);
+  margin: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-content: center;
+  border: none;
+}
+
+div.mode {
+  flex: 1 1 auto;
+  border: none;
+  background-color: #ffffff;
+  color: #777777;
+  font-size: calc(var(--board-width) / (9 * 1.5));
+  text-align: center;
+}
+
+/* highlight */
+div.mode[current="true"] {
+  text-decoration: underline;
+}
+div.mode:hover {
+  font-weight: bold;
+}
+

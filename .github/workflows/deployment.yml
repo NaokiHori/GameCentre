@@ -44,6 +44,15 @@ jobs:
             built css index.html \
             ../package/mini_maze/
           cd ..
+      - name: Build Sudoku Assistant
+        run: |
+          mkdir package/sudoku_assistant
+          cd sudoku_assistant
+          tsc
+          cp -r \
+            built css index.html \
+            ../package/sudoku_assistant/
+          cd ..
       - name: Setup GitHub Pages
         uses: actions/configure-pages@main
       - name: Upload HTML

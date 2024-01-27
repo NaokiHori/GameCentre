@@ -31,3 +31,18 @@ body {
   border-color: #000000;
 }
 
+footer {
+  width: 100%;
+  margin: auto;
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+footer > div.footer-copyright {
+  margin: auto;
+  color: #000000;
+  text-align: center;
+}
+
