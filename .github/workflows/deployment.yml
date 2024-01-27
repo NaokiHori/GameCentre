@@ -26,17 +26,26 @@ jobs:
         uses: actions/checkout@main
       - name: Setup node
         uses: actions/setup-node@main
-      - name: Install TS and build
+      - name: Install TypeScript
         run: |
-          npm install -g typescript && tsc
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@main
-      - name: Wrap-up elements
+          npm install -g typescript
+      - name: Prepare directory to be deployed
         run: |
           mkdir package
           cp -r \
+            css index.html \
+            package/
+      - name: Build Mini Maze
+        run: |
+          mkdir package/mini_maze
+          cd mini_maze
+          tsc
+          cp -r \
             built css index.html \
-            package
+            ../package/mini_maze/
+          cd ..
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@main
       - name: Upload HTML
         uses: actions/upload-pages-artifact@main
         with:

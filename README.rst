@@ -17,5 +17,5 @@
 Overview
 ********
 
-Junks.
+Series of web applications I developed for fun.
 
