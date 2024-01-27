@@ -131,6 +131,19 @@ export class Board {
     return Wrapper.querySelector(board, query);
   }
 
+  static get_block_range(n: number): [number, number] {
+    let min: number = 0;
+    if (n < 1 * BoardSize.Sub) {
+      min = 0 * BoardSize.Sub;
+    } else if (n < 2 * BoardSize.Sub) {
+      min = 1 * BoardSize.Sub;
+    } else {
+      min = 2 * BoardSize.Sub;
+    }
+    const max: number = min + BoardSize.Sub;
+    return [min, max];
+  }
+
 }
 
 function get_main_board(): HTMLElement {
@@ -207,28 +220,18 @@ function remove_na_candidates(cells: NodeListOf<HTMLElement>): void {
     if (` ` === ref_value) {
       continue;
     }
-    // same row, same col, same block
+    // check the same row
     const [ref_row, ref_col]: [number, number] = CellMethod.get_pos(ref_cell);
     for (let col: number = 0; col < BoardSize.Main; col++) {
       check_and_update(ref_value, [ref_row, col]);
     }
+    // check the same col
     for (let row: number = 0; row < BoardSize.Main; row++) {
       check_and_update(ref_value, [row, ref_col]);
     }
-    function get_block_range(n: number): [number, number] {
-      let min: number = 0;
-      if (n < 1 * BoardSize.Sub) {
-        min = 0 * BoardSize.Sub;
-      } else if (n < 2 * BoardSize.Sub) {
-        min = 1 * BoardSize.Sub;
-      } else {
-        min = 2 * BoardSize.Sub;
-      }
-      const max: number = min + BoardSize.Sub;
-      return [min, max];
-    }
-    const [rowmin, rowmax]: [number, number] = get_block_range(ref_row);
-    const [colmin, colmax]: [number, number] = get_block_range(ref_col);
+    // check the same block
+    const [rowmin, rowmax]: [number, number] = Board.get_block_range(ref_row);
+    const [colmin, colmax]: [number, number] = Board.get_block_range(ref_col);
     for (let row: number = rowmin; row < rowmax; row++) {
       for (let col: number = colmin; col < colmax; col++) {
         check_and_update(ref_value, [row, col]);

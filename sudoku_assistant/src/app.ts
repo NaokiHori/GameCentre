@@ -3,7 +3,7 @@ import { Board } from "./board.js";
 import { Numkey } from "./numkey.js";
 import { ClickEvents, KeyboardEvents } from "./event.js";
 
-window.addEventListener(`load`, (_event: Event) => {
+window.addEventListener(`load`, (/* event: Event */) => {
   Mode.initialise();
   Board.initialise();
   Numkey.initialise();

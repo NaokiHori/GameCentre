@@ -4,6 +4,7 @@ import { Mode, ModeType, ClassName as ModeClassName } from "./mode.js";
 import { Board, BoardSize, ClassName as BoardClassName } from "./board.js";
 import { ClassName as NumkeyClassName } from "./numkey.js";
 import { CellAttr, CellMethod } from "./cell.js";
+import { Sudoku } from "./sudoku.js";
 
 function assign_number_to_selected_cell(value: string): void {
   const cell: HTMLElement | null = Board.fetch_selected_cell();
@@ -114,6 +115,9 @@ export class KeyboardEvents {
         case `a`:
         case `d`:
           {
+            // move cursor
+            // use periodicity; e.g. trying to move right at the right boundary
+            //   ends up reaching the left boundary
             event.preventDefault();
             const ref_cell: HTMLElement | null = Board.fetch_selected_cell();
             if (!ref_cell) {
@@ -180,6 +184,13 @@ export class KeyboardEvents {
               break;
             }
             Board.all_clear();
+            break;
+          }
+        case `S`:
+          {
+            Mode.change(ModeType.Edit);
+            Board.reset();
+            Sudoku.solve();
             break;
           }
         default:

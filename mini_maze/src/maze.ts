@@ -1,7 +1,6 @@
 let g_board: Cell[][];
 let g_cursor: [number, number];
 let g_path_pts: [number, number][];
-let g_done: boolean = false;
 
 enum Cell {
   Wall = 0,
@@ -185,7 +184,6 @@ export class Maze {
     g_cursor[0] += delta[0];
     g_cursor[1] += delta[1];
     if (w - 1 === g_cursor[0] && h - 1 === g_cursor[1]) {
-      g_done = true;
       Maze.init([w, h]);
       return;
     }

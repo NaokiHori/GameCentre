@@ -22,6 +22,8 @@ Usage
      - Change to normal mode (to assign numbers)
    * - M / Memo
      - Change to memo mode (to assign memos)
+   * - S (keyboard only)
+     - Solve the puzzle automatically
    * - 0, Backspace, Space
      - Remove numbers under cursor
    * - 1-9
