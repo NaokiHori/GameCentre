@@ -23,7 +23,7 @@ Usage
    * - M / Memo
      - Change to memo mode (to assign memos)
    * - S (keyboard only)
-     - Solve the puzzle automatically
+     - Solve the puzzle automatically (it may take a few seconds)
    * - 0, Backspace, Space
      - Remove numbers under cursor
    * - 1-9
@@ -32,4 +32,11 @@ Usage
      - Move selected cell
 
 Bluish colors are used to highlight the selected values, while reddish colors indicate that the value is the only candidate of the cell.
+
+******
+Option
+******
+
+With a URL parameter `create`, it creates a random puzzle presumably having a unique solution.
+The Sudoku maker adopts `backtracking algorithm <https://en.wikipedia.org/wiki/Sudoku_solving_algorithms#Backtracking>` and it may take a few seconds.
 

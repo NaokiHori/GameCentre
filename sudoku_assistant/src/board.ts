@@ -2,6 +2,7 @@ import { Wrapper } from "./wrapper.js";
 import { MyError } from "./myerror.js";
 import { Mode, ModeType } from "./mode.js";
 import { CellAttr, CellMethod } from "./cell.js";
+import { Sudoku } from "./sudoku.js";
 
 export enum BoardSize {
   Main = 9,
@@ -76,18 +77,15 @@ export class Board {
   static initialise(): void {
     // set edit mode
     Mode.change(ModeType.Edit);
-    // a sample default puzzle
-    const puzzle: string[][] = [
-      [`8`, ` `, `6`, ` `, `3`, ` `, ` `, `7`, ` `, ],
-      [`1`, ` `, ` `, ` `, ` `, ` `, ` `, ` `, ` `, ],
-      [` `, ` `, ` `, `4`, ` `, ` `, ` `, ` `, `3`, ],
-      [` `, ` `, `1`, ` `, `2`, ` `, `8`, ` `, ` `, ],
-      [`2`, ` `, ` `, ` `, ` `, ` `, ` `, ` `, `4`, ],
-      [` `, ` `, ` `, `9`, ` `, ` `, ` `, ` `, ` `, ],
-      [` `, ` `, ` `, ` `, ` `, `7`, `5`, `2`, ` `, ],
-      [` `, `5`, `3`, ` `, `1`, ` `, ` `, ` `, `8`, ],
-      [` `, ` `, `8`, ` `, `6`, ` `, ` `, ` `, `7`, ],
-    ];
+    // make a random / sample puzzle
+    // check if a URL param "create" is given
+    //   if it is, create a new puzzle radomly
+    //   otherwise use default fixed problem
+    const url_params = new URLSearchParams(window.location.search);
+    const create: boolean = url_params.has(`create`);
+    const puzzle: string[] = Sudoku.init(create);
+    // initialise all DOMs anyway
+    // flags will be updated later
     const board: HTMLElement = get_main_board();
     for (let row: number = 0; row < BoardSize.Main; row++) {
       const elems: HTMLElement = Wrapper.create_and_append_div(board);
@@ -98,11 +96,11 @@ export class Board {
         Wrapper.set_flag(cell, CellAttr.Select,    false);
         Wrapper.set_flag(cell, CellAttr.Original,  false);
         Wrapper.set_flag(cell, CellAttr.Highlight, false);
-        //
+        // normal cell, fill the given value and enabled
         const text: HTMLElement = Wrapper.create_and_append_div(cell);
         text.classList.add(ClassName.Text);
-        text.textContent = puzzle[row][col];
-        //
+        text.textContent = puzzle[row * BoardSize.Main + col];
+        // memo cell, empty and disabled
         const memo: HTMLElement = Wrapper.create_and_append_div(cell);
         memo.classList.add(ClassName.Memo);
         for (let memo_row: number = 0; memo_row < BoardSize.Sub; memo_row++) {
@@ -118,6 +116,7 @@ export class Board {
         CellMethod.change_mode(cell, true);
       }
     }
+    // make everything consistent
     Board.refresh(` `);
     // recover normal mode
     Mode.change(ModeType.Normal);
