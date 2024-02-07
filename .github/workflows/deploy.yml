@@ -1,0 +1,104 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build-maze:
+    name: Build maze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Setup node
+        uses: actions/setup-node@main
+      - name: Install TypeScript
+        run: |
+          npm install -g typescript
+      - name: Build
+        run: |
+          cd mini_maze
+          mkdir package
+          tsc
+          cp -r \
+            built style.css index.html \
+            package/
+          cd ..
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: mini_maze
+          path: mini_maze/package
+
+  build-sudoku:
+    name: Build sudoku
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Setup node
+        uses: actions/setup-node@main
+      - name: Install TypeScript
+        run: |
+          npm install -g typescript
+      - name: Build
+        run: |
+          cd sudoku_assistant
+          mkdir package
+          tsc
+          cp -r \
+            built css index.html \
+            package/
+          cd ..
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: sudoku_assistant
+          path: sudoku_assistant/package
+
+  merge-and-deploy:
+    name: Merge artifacts and deploy
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: [build-maze, build-sudoku]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Prepare directory to deploy
+        run: |
+          mkdir package
+          cp \
+            index.html style.css \
+            package/
+      - name: Download maze
+        uses: actions/download-artifact@main
+        with:
+          name: mini_maze
+          path: package/mini_maze
+      - name: Download sudoku
+        uses: actions/download-artifact@main
+        with:
+          name: sudoku_assistant
+          path: package/sudoku_assistant
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@main
+      - name: Upload HTML
+        uses: actions/upload-pages-artifact@main
+        with:
+          path: package
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@main
+
