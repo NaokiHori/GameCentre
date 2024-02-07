@@ -59,6 +59,41 @@ jobs:
           name: sudoku_assistant
           path: sudoku_assistant/package
 
+  build-mandelbrot:
+    name: Build mandelbrot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@main
+      - name: Install wasm-pack
+        run: |
+          cargo install wasm-pack
+      - name: Setup node
+        uses: actions/setup-node@main
+      - name: Install TypeScript
+        run: |
+          npm install -g typescript
+      - name: Build
+        run: |
+          cd mandelbrot
+          mkdir package
+          dest="built"
+          wasm-pack build --target web
+          mkdir ${dest}
+          cp pkg/*.js ${dest}/
+          cp pkg/*.wasm ${dest}/
+          cp pkg/*.ts typescript/
+          tsc --outDir ${dest}
+          cp -r \
+            built style.css index.html thumbnail.jpg \
+            package/
+          cd ..
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: mandelbrot
+          path: mandelbrot/package
+
   merge-and-deploy:
     name: Merge artifacts and deploy
     permissions:
@@ -72,7 +107,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: [build-maze, build-sudoku]
+    needs: [build-maze, build-sudoku, build-mandelbrot]
     steps:
       - name: Checkout repository
         uses: actions/checkout@main
@@ -92,6 +127,11 @@ jobs:
         with:
           name: sudoku_assistant
           path: package/sudoku_assistant
+      - name: Download mandelbrot
+        uses: actions/download-artifact@main
+        with:
+          name: mandelbrot
+          path: package/mandelbrot
       - name: Setup GitHub Pages
         uses: actions/configure-pages@main
       - name: Upload HTML

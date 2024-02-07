@@ -1,0 +1,44 @@
+*,
+*::before,
+*::after {
+  margin: auto;
+  text-align: center;
+  overflow: hidden;
+}
+
+html {
+  width: 100vw;
+  height: 100vh;
+  --sub-size: 3vh;
+  --cv-size: calc(min(95vw, 100vh - 3 * var(--sub-size)));
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+}
+
+div.header {
+  width: 100%;
+  height: calc(2 * var(--sub-size));
+  font-size: calc(0.75 * var(--sub-size));
+}
+
+div.header > a {
+  color: #a9ceec;
+}
+
+#my-canvas {
+  width: var(--cv-size);
+  height: var(--cv-size);
+  box-sizing: border-box;
+}
+
+div.footer {
+  width: 100%;
+  height: var(--sub-size);
+  font-size: calc(0.75 * var(--sub-size));
+}
+
