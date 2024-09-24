@@ -1,0 +1,35 @@
+div.mode-buttons {
+  /* parent div element storing all mode buttons */
+  width: var(--board-size);
+  margin: auto;
+  padding: var(--padding-vertical) 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-evenly;
+  align-content: stretch;
+  align-items: stretch;
+  & > button {
+    /* each mode button */
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    padding: 0;
+    border: none;
+    background-color: #ffffff;
+    color: #777777;
+    font-size: var(--large-font-size);
+    text-align: center;
+    /* highlight */
+    &[selected="true"] {
+      text-decoration: underline;
+    }
+    &[selected="false"] {
+      text-decoration: none;
+    }
+    &:hover {
+      font-weight: bold;
+      cursor: pointer;
+    }
+  }
+}

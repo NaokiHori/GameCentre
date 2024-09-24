@@ -41,23 +41,17 @@ jobs:
         uses: actions/checkout@main
       - name: Setup node
         uses: actions/setup-node@main
-      - name: Install TypeScript
-        run: |
-          npm install -g typescript
-      - name: Build
+      - name: Install dependencies and build
         run: |
           cd sudoku_assistant
-          mkdir package
-          tsc
-          cp -r \
-            built css index.html \
-            package/
+          npm install
+          npm run build-prod
           cd ..
       - name: Upload
         uses: actions/upload-artifact@main
         with:
           name: sudoku_assistant
-          path: sudoku_assistant/package
+          path: sudoku_assistant/dist
 
   build-mandelbrot:
     name: Build mandelbrot

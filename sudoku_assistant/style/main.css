@@ -1,0 +1,40 @@
+@import "./board.css";
+@import "./mode-buttons.css";
+@import "./number-buttons.css";
+
+* {
+  font-family: "Courier New";
+  font-weight: normal;
+  color: #777777;
+  --board-size: min(80vh, 90vw);
+  user-select: none;
+  -webkit-user-select: none;
+  --selected-color: #5e88bf;
+  --highlighted-color: #8bcad9;
+  --unique-color: #ff6962;
+  --border-color: #777777;
+  --border-style: solid;
+  --padding-vertical: 0.5vh;
+  --thin-border: 0.125vh;
+  --thick-border: 0.375vh;
+  --medium-font-size: 2.5vh;
+  --large-font-size: 4vh;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: auto;
+  background-color: #ffffff;
+}
+
+footer {
+  width: 100%;
+  margin: auto;
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  background-color: #000000;
+  font-size: var(--medium-font-size);
+  color: #ffffff;
+}
