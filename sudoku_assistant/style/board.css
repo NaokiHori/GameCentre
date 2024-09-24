@@ -1,0 +1,108 @@
+div.board {
+  box-sizing: content-box;
+  margin: auto;
+  width: var(--board-size);
+  height: var(--board-size);
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  border-color: var(--border-color);
+  border-style: var(--border-style);
+  border-width: calc(2 * var(--thick-border));
+
+  & > div.cell {
+    /* boarders to indicate sudoku board */
+    border-color: var(--border-color);
+    border-style: var(--border-style);
+    border-width: var(--thin-border);
+    &[row="2"],
+    &[row="5"] {
+      border-bottom-width: var(--thick-border);
+    }
+    &[row="3"],
+    &[row="6"] {
+      border-top-width: var(--thick-border);
+    }
+    &[col="2"],
+    &[col="5"] {
+      border-right-width: var(--thick-border);
+    }
+    &[col="3"],
+    &[col="6"] {
+      border-left-width: var(--thick-border);
+    }
+
+    /* configs typical to normal cell mode */
+    &[cellMode="Normal"] {
+      display: flex;
+      flex-flow: column;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: center;
+      & > div.text {
+        display: block;
+        text-align: center;
+        color: #000000;
+        font-size: calc(var(--board-size) / 9 / 1.5);
+      }
+      & > div.subcell {
+        display: none;
+      }
+      &[isDefault="true"] > div.text {
+        color: #000000;
+        font-weight: bold;
+      }
+    }
+
+    /* configs typical to memo cell mode */
+    &[cellMode="Memo"] {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      & > div.text {
+        display: none;
+      }
+      & > div.subcell {
+        display: flex;
+        flex-flow: column;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        &[isValid="true"] {
+          &[isDisabled="true"] > div.text {
+            display: none;
+          }
+          &[isDisabled="false"] {
+            &[isHighlighted="true"] {
+              background-color: var(--highlighted-color);
+            }
+            &[isUnique="true"] {
+              background-color: var(--unique-color);
+            }
+            & > div.text {
+              display: block;
+              text-align: center;
+              color: #000000;
+              font-size: calc(var(--board-size) / 9 / 3 / 1.5);
+            }
+          }
+        }
+        &[isValid="false"] > div.text {
+          display: none;
+        }
+      }
+    }
+
+    /* highlight */
+    &:hover {
+      background-color: #aaaaaa;
+      cursor: pointer;
+    }
+    &[isHighlighted="true"] {
+      background-color: var(--highlighted-color);
+    }
+    &[isSelected="true"] {
+      background-color: var(--selected-color);
+    }
+  }
+}
