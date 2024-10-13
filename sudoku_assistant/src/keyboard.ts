@@ -1,6 +1,7 @@
 import { changeEditMode } from "./edit-mode";
 import { clickButton } from "./number-button";
 import { SudokuValue, sudokuValues, EMPTY_VALUE } from "./sudoku-value";
+import { updateSelectedCell } from "./board";
 
 export function initializeKeyboardEvents() {
   document.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -30,6 +31,26 @@ export function initializeKeyboardEvents() {
         case "m":
         case "M": {
           changeEditMode("Memo");
+          break;
+        }
+        case "ArrowDown":
+        case "j": {
+          updateSelectedCell("Down");
+          break;
+        }
+        case "ArrowUp":
+        case "k": {
+          updateSelectedCell("Up");
+          break;
+        }
+        case "ArrowLeft":
+        case "h": {
+          updateSelectedCell("Left");
+          break;
+        }
+        case "ArrowRight":
+        case "l": {
+          updateSelectedCell("Right");
           break;
         }
         default: {

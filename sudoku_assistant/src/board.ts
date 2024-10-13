@@ -390,14 +390,7 @@ export function highlightBoard() {
 
 export function validateAndUpdateValue(value: SudokuValue) {
   // check if a cell is selected in the first place
-  const selectedCell: Cell | null = (function getSelectedCell() {
-    for (const cell of cells) {
-      if (cell.isSelected) {
-        return cell;
-      }
-    }
-    return null;
-  })();
+  const selectedCell: Cell | null = getSelectedCell();
   if (selectedCell === null) {
     return;
   }
@@ -482,6 +475,48 @@ export function validateAndUpdateValue(value: SudokuValue) {
   for (const cell of cells) {
     cell.updateUniquenessOfMemoValues();
   }
+}
+
+function getSelectedCell(): Cell | null {
+  for (const cell of cells) {
+    if (cell.isSelected) {
+      return cell;
+    }
+  }
+  return null;
+}
+
+export function updateSelectedCell(
+  direction: "Down" | "Up" | "Left" | "Right",
+) {
+  const prevSelectedCell: Cell | null = getSelectedCell();
+  if (prevSelectedCell === null) {
+    return;
+  }
+  prevSelectedCell.isSelected = false;
+  const nextSelectedCell: Cell = (function (): Cell {
+    const { row, col } = prevSelectedCell.position;
+    const newRow: number = (function (): number {
+      if (direction === "Up") {
+        return (row - 1 + BOARD_SIZE) % BOARD_SIZE;
+      } else if (direction === "Down") {
+        return (row + 1) % BOARD_SIZE;
+      } else {
+        return row;
+      }
+    })();
+    const newCol: number = (function (): number {
+      if (direction === "Left") {
+        return (col - 1 + BOARD_SIZE) % BOARD_SIZE;
+      } else if (direction === "Right") {
+        return (col + 1) % BOARD_SIZE;
+      } else {
+        return col;
+      }
+    })();
+    return cells[newRow * BOARD_SIZE + newCol];
+  })();
+  nextSelectedCell.isSelected = true;
 }
 
 export function unselectBoard() {
