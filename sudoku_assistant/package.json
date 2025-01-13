@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "build-prod": "vite build --base=https://naokihori.github.io/GameCentre/sudoku_assistant/",
+    "build-prod": "vite build --base=https://naokihori.github.io/Trash/sudoku_assistant/",
     "check": "tsc",
     "dev": "vite",
     "prepare": "cd .. && husky sudoku_assistant/.husky"

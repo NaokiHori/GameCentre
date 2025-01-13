@@ -1,10 +1,10 @@
 ########################################################################################
-`Sudoku Assistant <https://naokihori.github.io/GameCentre/sudoku_assistant/index.html>`_
+`Sudoku Assistant <https://naokihori.github.io/Trash/sudoku_assistant/index.html>`_
 ########################################################################################
 
 |License|_
 
-.. |License| image:: https://img.shields.io/github/license/NaokiHori/GameCentre
+.. |License| image:: https://img.shields.io/github/license/NaokiHori/Trash
 .. _License: https://opensource.org/license/MIT
 
 *****

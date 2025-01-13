@@ -1,13 +1,13 @@
 ############################################################################
-`Mandelbrot <https://naokihori.github.io/GameCentre/mandelbrot/index.html>`_
+`Mandelbrot <https://naokihori.github.io/Trash/mandelbrot/index.html>`_
 ############################################################################
 
 |License|_
 
-.. |License| image:: https://img.shields.io/github/license/NaokiHori/GameCentre
+.. |License| image:: https://img.shields.io/github/license/NaokiHori/Trash
 .. _License: https://opensource.org/license/MIT
 
-.. image:: https://github.com/NaokiHori/GameCentre/blob/main/mandelbrot/thumbnail.jpg
+.. image:: https://github.com/NaokiHori/Trash/blob/main/mandelbrot/thumbnail.jpg
    :target: https://youtu.be/6C9H1WNWY7s
    :width: 80%
 
