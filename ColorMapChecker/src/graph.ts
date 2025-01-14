@@ -106,7 +106,7 @@ export class Graph {
   }
 
   public setClickHandler(onClick: () => void) {
-    window.addEventListener("click", () => {
+    this._canvas.addEventListener("click", () => {
       this._displayHsv = !this._displayHsv;
       this._titles.rgb.setAttribute(
         "style",
