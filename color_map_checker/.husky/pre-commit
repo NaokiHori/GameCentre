@@ -1,0 +1,1 @@
+cd color_map_checker/ && npx lint-staged

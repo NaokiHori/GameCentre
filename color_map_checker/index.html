@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color map checker</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <canvas id="color-map">HTML canvas is not supported</canvas>
+    <div id="main">
+      <div id="color-selectors"></div>
+      <div id="graph-container">
+        <div id="graph">
+          <div id="graph-title-rgb" style="display: inline">
+            <span style="color: #ff0000">R</span
+            ><span style="color: #00ff00">G</span
+            ><span style="color: #0000ff">B</span>
+          </div>
+          <div id="graph-title-hsv" style="display: none">
+            <span style="color: #00ffff">H</span
+            ><span style="color: #ff00ff">S</span
+            ><span style="color: #ffff00">V</span>
+          </div>
+          <canvas id="graph-canvas">HTML canvas is not supported</canvas>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
