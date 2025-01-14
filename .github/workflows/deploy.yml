@@ -18,7 +18,7 @@ jobs:
           npm install -g typescript
       - name: Build
         run: |
-          cd mini_maze
+          cd MiniMaze
           mkdir package
           tsc
           cp -r \
@@ -28,8 +28,8 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@main
         with:
-          name: mini_maze
-          path: mini_maze/package
+          name: MiniMaze
+          path: MiniMaze/package
 
   build-sudoku:
     name: Build sudoku
@@ -41,15 +41,18 @@ jobs:
         uses: actions/setup-node@main
       - name: Install dependencies and build
         run: |
-          cd sudoku_assistant
+          cd SudokuAssistant
           npm install
-          npm run build-prod
+          npx \
+            vite build \
+            --outDir=dist \
+            --base=https://naokihori.github.io/Trash/SudokuAssistant/
           cd ..
       - name: Upload
         uses: actions/upload-artifact@main
         with:
-          name: sudoku_assistant
-          path: sudoku_assistant/dist
+          name: SudokuAssistant
+          path: SudokuAssistant/dist
 
   build-color-map-checker:
     name: Build color-map checker
@@ -61,7 +64,7 @@ jobs:
         uses: actions/setup-node@main
       - name: Install dependencies and build
         run: |
-          cd color_map_checker
+          cd ColorMapChecker
           npm install
           npx \
             vite build \
@@ -72,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: ColorMapChecker
-          path: color_map_checker/dist
+          path: ColorMapChecker/dist
 
   merge-and-deploy:
     name: Merge artifacts and deploy
@@ -100,13 +103,13 @@ jobs:
       - name: Download maze
         uses: actions/download-artifact@main
         with:
-          name: mini_maze
-          path: package/mini_maze
+          name: MiniMaze
+          path: package/MiniMaze
       - name: Download sudoku
         uses: actions/download-artifact@main
         with:
-          name: sudoku_assistant
-          path: package/sudoku_assistant
+          name: SudokuAssistant
+          path: package/SudokuAssistant
       - name: Download color map checker
         uses: actions/download-artifact@main
         with:
