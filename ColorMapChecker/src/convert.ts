@@ -50,7 +50,13 @@ export function rgbToHsv(
       return h + (h < 0 ? 1 : 0);
     }
   })();
-  const s = (max - min) / max;
+  const s = (function () {
+    if (0 === max) {
+      return (max - min) / max;
+    } else {
+      return 0;
+    }
+  })();
   const v = max;
   return [h, s, v];
 }
