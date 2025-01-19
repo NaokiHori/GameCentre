@@ -1,13 +1,8 @@
-function initializeElement<T extends HTMLElement>(
-  element: T,
-  {
-    classListItems,
-    attributes,
-  }: {
-    classListItems: ReadonlyArray<string>;
-    attributes: ReadonlyArray<{ readonly key: string; readonly value: string }>;
-  },
-): T {
+function initializeElement(
+  element: HTMLElement,
+  classListItems: ReadonlyArray<string>,
+  attributes: ReadonlyArray<{ readonly key: string; readonly value: string }>,
+): HTMLElement {
   for (const classListItem of classListItems) {
     element.classList.add(classListItem);
   }
@@ -17,38 +12,18 @@ function initializeElement<T extends HTMLElement>(
   return element;
 }
 
-export function createChildDivElement({
+export function createChildElement({
+  tagName,
   parentElement,
   classListItems,
   attributes,
 }: {
+  tagName: "div" | "button" | "footer" | "a";
   parentElement: HTMLElement;
   classListItems: ReadonlyArray<string>;
   attributes: ReadonlyArray<{ readonly key: string; readonly value: string }>;
-}): HTMLDivElement {
-  const tagName = "div";
-  const childElement: HTMLDivElement = document.createElement(tagName);
+}): HTMLElement {
+  const childElement: HTMLElement = document.createElement(tagName);
   parentElement.appendChild(childElement);
-  return initializeElement<HTMLDivElement>(childElement, {
-    classListItems,
-    attributes,
-  });
-}
-
-export function createChildButtonElement({
-  parentElement,
-  classListItems,
-  attributes,
-}: {
-  parentElement: HTMLElement;
-  classListItems: ReadonlyArray<string>;
-  attributes: ReadonlyArray<{ readonly key: string; readonly value: string }>;
-}): HTMLButtonElement {
-  const tagName = "button";
-  const childElement: HTMLButtonElement = document.createElement(tagName);
-  parentElement.appendChild(childElement);
-  return initializeElement<HTMLButtonElement>(childElement, {
-    classListItems,
-    attributes,
-  });
+  return initializeElement(childElement, classListItems, attributes);
 }

@@ -23,12 +23,12 @@ div.board {
     &[row="6"] {
       border-top-width: var(--thick-border);
     }
-    &[col="2"],
-    &[col="5"] {
+    &[column="2"],
+    &[column="5"] {
       border-right-width: var(--thick-border);
     }
-    &[col="3"],
-    &[col="6"] {
+    &[column="3"],
+    &[column="6"] {
       border-left-width: var(--thick-border);
     }
 

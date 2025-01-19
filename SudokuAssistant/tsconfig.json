@@ -28,5 +28,5 @@
     "target": "es6",
     "useUnknownInCatchVariables": true
   },
-  "include": ["./src/*.ts"]
+  "include": ["./src/**/*.ts"]
 }

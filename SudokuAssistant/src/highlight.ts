@@ -1,15 +1,28 @@
-import { highlightButton } from "./number-button";
-import { highlightBoard } from "./board";
-import { EMPTY_VALUE, SudokuValue } from "./sudoku-value";
+import { EMPTY_VALUE, SudokuValue } from "./sudokuValue";
 
-let highlightedValue: SudokuValue = EMPTY_VALUE;
+export class Highlight {
+  private _highlightedValue: SudokuValue;
+  private _onUpdateHandler: (highlightedValue: SudokuValue) => void;
 
-export function getHighlightedValue(): SudokuValue {
-  return highlightedValue;
-}
+  public constructor() {
+    this._highlightedValue = EMPTY_VALUE;
+    this._onUpdateHandler = () => {
+      /* will be registered by the "value" setter */
+    };
+  }
 
-export function setHighlightedValue(value: SudokuValue) {
-  highlightedValue = value;
-  highlightButton();
-  highlightBoard();
+  public setOnUpdateHandler(
+    onUpdateHandler: (highlightedValue: SudokuValue) => void,
+  ) {
+    this._onUpdateHandler = onUpdateHandler;
+  }
+
+  public get value(): SudokuValue {
+    return this._highlightedValue;
+  }
+
+  public set value(highlightedValue: SudokuValue) {
+    this._highlightedValue = highlightedValue;
+    this._onUpdateHandler(highlightedValue);
+  }
 }

@@ -1,37 +1,17 @@
-import { createChildDivElement } from "./dom";
-import { initializeEditMode } from "./edit-mode";
-import { initializeBoard, unselectBoard } from "./board";
-import { initializeNumberButtons } from "./number-button";
-import { initializeKeyboardEvents } from "./keyboard";
-import { setHighlightedValue } from "./highlight";
-import { EMPTY_VALUE } from "./sudoku-value";
+import { Body } from "./body";
+import { EditModes } from "./editMode";
+import { Board } from "./board";
+import { NumberButtons } from "./numberButton";
+import { createFooterElement } from "./footer";
+import { setKeyboardEvents } from "./keyboard";
+import { Highlight } from "./highlight";
+import { SudokuValue, EMPTY_VALUE } from "./sudokuValue";
 
-document.body.addEventListener("click", () => {
-  unselectBoard();
-  setHighlightedValue(EMPTY_VALUE);
-});
-
-window.addEventListener("load", () => {
-  // create containers
-  const bodyElement: HTMLElement = document.body;
-  const editModeButtonContainer: HTMLDivElement = createChildDivElement({
-    parentElement: bodyElement,
-    classListItems: ["mode-buttons"],
-    attributes: [],
-  });
-  const board: HTMLDivElement = createChildDivElement({
-    parentElement: bodyElement,
-    classListItems: ["board"],
-    attributes: [],
-  });
-  const numberButtonContainer: HTMLDivElement = createChildDivElement({
-    parentElement: bodyElement,
-    classListItems: ["number-buttons"],
-    attributes: [],
-  });
-  // initialize child elements
-  initializeEditMode(editModeButtonContainer);
-  initializeBoard(board, [
+function main() {
+  // instantiate elements
+  const body = new Body();
+  const editModes = new EditModes(body);
+  const board = new Board(body, [
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 7, 6, 0, 4, 0],
     [0, 0, 0, 0, 2, 0, 1, 0, 3],
@@ -42,7 +22,32 @@ window.addEventListener("load", () => {
     [6, 0, 8, 1, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 2, 0, 0, 0],
   ]);
-  initializeNumberButtons(numberButtonContainer);
-  // map keyboard to corresponding events
-  initializeKeyboardEvents();
+  const numberButtons = new NumberButtons(body);
+  createFooterElement(body);
+  const highlight = new Highlight();
+  // register event handlers
+  highlight.setOnUpdateHandler((highlightedValue: SudokuValue) => {
+    numberButtons.highlight(highlightedValue);
+    board.highlight(highlightedValue);
+  });
+  body.setOnClickHandler(() => {
+    board.unselect();
+    highlight.value = EMPTY_VALUE;
+  });
+  board.setOnClickHandler((cellValue: SudokuValue) => {
+    board.unselect();
+    highlight.value = cellValue;
+  });
+  numberButtons.setOnClickHandler((clickedButtonValue: SudokuValue) => {
+    board.validateAndUpdateValue(editModes, clickedButtonValue);
+    highlight.value = clickedButtonValue;
+  });
+  document.addEventListener("keydown", (keyboardEvent: KeyboardEvent) => {
+    const key: string = keyboardEvent.key;
+    setKeyboardEvents(key, board, editModes, numberButtons);
+  });
+}
+
+window.addEventListener("load", () => {
+  main();
 });

@@ -10,5 +10,6 @@
 - **0, Backspace, Space**: Remove numbers under the cursor.
 - **1-9**: Highlight numbers, and input numbers under the cursor if one of the cells are selected.
 - **Arrow keys (keyboard only)**: Move the selected cell.
+- **R (keyboard only)**: Reset board.
 
 Bluish colors are used to indicate the value is selected, while reddish colors denote that it is the only applicable value.

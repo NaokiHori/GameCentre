@@ -1,461 +1,121 @@
-import { createChildDivElement } from "./dom";
-import { EditMode, getCurrentEditMode } from "./edit-mode";
-import { getHighlightedValue, setHighlightedValue } from "./highlight";
+import { createChildElement } from "./dom";
+import { Body } from "./body";
+import { EditMode, EditModes } from "./editMode";
 import {
   EMPTY_VALUE,
-  sudokuValues,
+  SUDOKU_VALUES,
   SudokuValue,
   isEmpty,
-} from "./sudoku-value";
+} from "./sudokuValue";
+import { Cell } from "./board/cell";
+import { BOARD_SIZE } from "./board/param";
+import { Position } from "./board/position";
+import { setNeighborCells } from "./board/setNeighborCells";
 
-interface Position {
-  readonly row: number;
-  readonly col: number;
-}
+export class Board {
+  private _cells: Array<Cell>;
 
-type CellMode = "Normal" | "Memo";
-
-const defaultCellMode: CellMode = "Memo";
-
-const BASE_SIZE = 3;
-
-export const BOARD_SIZE = BASE_SIZE * BASE_SIZE;
-
-const numberOfCells = BOARD_SIZE * BOARD_SIZE;
-
-const cells: Array<Cell> = [];
-
-class NeighborCells {
-  readonly sameRow: Array<Cell>;
-  readonly sameColumn: Array<Cell>;
-  readonly sameBlock: Array<Cell>;
-
-  public constructor(position: Position) {
-    function getSameRowCells(): Array<Cell> {
-      const neighborCells = new Array<Cell>();
-      const row: number = position.row;
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        if (col === position.col) {
-          continue;
-        }
-        neighborCells.push(cells[row * BOARD_SIZE + col]);
-      }
-      return neighborCells;
-    }
-    function getSameColumnCells(): Array<Cell> {
-      const neighborCells = new Array<Cell>();
-      const col: number = position.col;
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        if (row === position.row) {
-          continue;
-        }
-        neighborCells.push(cells[row * BOARD_SIZE + col]);
-      }
-      return neighborCells;
-    }
-    function getSameBlockCells(): Array<Cell> {
-      const neighborCells = new Array<Cell>();
-      const j: number = Math.floor(position.row / BASE_SIZE);
-      const i: number = Math.floor(position.col / BASE_SIZE);
-      for (let row = BASE_SIZE * j; row < BASE_SIZE * (j + 1); row++) {
-        for (let col = BASE_SIZE * i; col < BASE_SIZE * (i + 1); col++) {
-          if (position.row === row && position.col === col) {
-            continue;
-          }
-          neighborCells.push(cells[row * BOARD_SIZE + col]);
-        }
-      }
-      return neighborCells;
-    }
-    this.sameRow = getSameRowCells();
-    this.sameColumn = getSameColumnCells();
-    this.sameBlock = getSameBlockCells();
-  }
-
-  public flatten(): Array<Cell> {
-    const cells = new Array<Cell>();
-    for (const neighborCell of this.sameRow) {
-      cells.push(neighborCell);
-    }
-    for (const neighborCell of this.sameColumn) {
-      cells.push(neighborCell);
-    }
-    for (const neighborCell of this.sameBlock) {
-      cells.push(neighborCell);
-    }
-    return cells;
-  }
-}
-
-class Cell {
-  private readonly _position: Position;
-  private readonly _cellElement: HTMLDivElement;
-  private readonly _cellTextElement: HTMLDivElement;
-  // NOTE: includes a dummy element (0) for convenience, which is "display: none"
-  private readonly _subCellElements: ReadonlyArray<HTMLDivElement>;
-  private readonly _subCellValuesValid: Array<boolean> = new Array<boolean>(
-    sudokuValues.length,
-  ).fill(/* initially assume all candidates are valid */ true);
-  private readonly _subCellValuesUnique: Array<boolean> = new Array<boolean>(
-    sudokuValues.length,
-  ).fill(false);
-  private readonly _subCellValuesDisabled: Array<boolean> = new Array<boolean>(
-    sudokuValues.length,
-  ).fill(false);
-  private _value: SudokuValue = EMPTY_VALUE;
-  private _isDefault = false;
-  private _isSelected = false;
-  private _cellMode: CellMode = defaultCellMode;
-
-  public constructor(containerElement: HTMLElement, position: Position) {
-    // element to contain
-    //   1. normal value
-    //   2. nine memo values
-    const cellElement: HTMLDivElement = createChildDivElement({
-      parentElement: containerElement,
-      classListItems: ["cell"],
-      attributes: [
-        { key: "cellMode", value: defaultCellMode },
-        { key: "row", value: position.row.toString() },
-        { key: "col", value: position.col.toString() },
-        { key: "isHighlighted", value: false.toString() },
-        { key: "isSelected", value: false.toString() },
-      ],
-    });
-    cellElement.addEventListener("click", (event: Event) => {
-      // disable body element click
-      event.stopPropagation();
-      // other cells should be unselected
-      unselectBoard();
-      // select this cell
-      this.isSelected = true;
-      // highlight cells and subcells which contain this value
-      setHighlightedValue(this.value);
-    });
-    // element to keep normal value, which is vertically centered
-    const cellTextElement: HTMLDivElement = createChildDivElement({
-      parentElement: cellElement,
-      classListItems: ["text"],
+  public constructor(
+    body: Body,
+    puzzle: ReadonlyArray<ReadonlyArray<SudokuValue>>,
+  ) {
+    const element = createChildElement({
+      tagName: "div",
+      parentElement: body.element,
+      classListItems: ["board"],
       attributes: [],
-    });
-    // elements to keep memo values
-    const subCellElements = sudokuValues.map((sudokuValue: SudokuValue) => {
-      const subCellElement: HTMLDivElement = createChildDivElement({
-        parentElement: cellElement,
-        classListItems: ["subcell"],
-        attributes: [
-          { key: "isHighlighted", value: false.toString() },
-          { key: "isUnique", value: false.toString() },
-          { key: "isDisabled", value: false.toString() },
-        ],
-      });
-      const subCellTextElement: HTMLDivElement = createChildDivElement({
-        parentElement: subCellElement,
-        classListItems: ["text"],
-        attributes: [],
-      });
-      subCellTextElement.textContent = sudokuValue.toString();
-      if (EMPTY_VALUE === sudokuValue) {
-        subCellElement.style.display = "none";
-      }
-      return subCellElement;
-    });
-    this._cellElement = cellElement;
-    this._cellTextElement = cellTextElement;
-    this._subCellElements = subCellElements;
-    this._position = position;
-  }
-
-  public get value(): SudokuValue {
-    return this._value;
-  }
-
-  public set value(value: SudokuValue) {
-    this._value = value;
-    this._cellTextElement.textContent = isEmpty(value) ? "" : value.toString();
-  }
-
-  public get isSelected(): boolean {
-    return this._isSelected;
-  }
-
-  public set isSelected(flag: boolean) {
-    this._isSelected = flag;
-    this._cellElement.setAttribute("isSelected", flag.toString());
-  }
-
-  public set isHighlighted(flag: boolean) {
-    this._cellElement.setAttribute("isHighlighted", flag.toString());
-  }
-
-  public get isDefault(): boolean {
-    return this._isDefault;
-  }
-
-  public set isDefault(flag: boolean) {
-    this._isDefault = flag;
-    this._cellElement.setAttribute("isDefault", flag.toString());
-  }
-
-  public get cellMode(): CellMode {
-    return this._cellMode;
-  }
-
-  public set cellMode(cellMode: CellMode) {
-    this._cellMode = cellMode;
-    this._cellElement.setAttribute("cellMode", cellMode);
-  }
-
-  public get position(): Position {
-    return this._position;
-  }
-
-  public getSubCellValidity(value: SudokuValue): boolean {
-    return this._subCellValuesValid[value];
-  }
-
-  public setSubCellValidity(value: SudokuValue, isValid: boolean) {
-    this._subCellValuesValid[value] = isValid;
-    this._subCellElements[value].setAttribute("isValid", isValid.toString());
-  }
-
-  public getSubCellUniqueness(value: SudokuValue): boolean {
-    return this._subCellValuesUnique[value];
-  }
-
-  public setSubCellUniqueness(value: SudokuValue, isUnique: boolean) {
-    this._subCellValuesUnique[value] = isUnique;
-    this._subCellElements[value].setAttribute("isUnique", isUnique.toString());
-  }
-
-  public getSubCellDisability(value: SudokuValue): boolean {
-    return this._subCellValuesDisabled[value];
-  }
-
-  public setSubCellDisability(value: SudokuValue, isDisabled: boolean) {
-    this._subCellValuesDisabled[value] = isDisabled;
-    this._subCellElements[value].setAttribute(
-      "isDisabled",
-      isDisabled.toString(),
-    );
-  }
-
-  public highlightSubCell(value: SudokuValue) {
-    for (const sudokuValue of sudokuValues) {
-      this._subCellElements[sudokuValue].setAttribute(
-        "isHighlighted",
-        (sudokuValue === value).toString(),
-      );
-    }
-  }
-
-  public getNeighborCells(): NeighborCells {
-    const position: Position = this.position;
-    return new NeighborCells(position);
-  }
-
-  public validate(newValue: SudokuValue): boolean {
-    const neighborCells: Array<Cell> = this.getNeighborCells().flatten();
-    for (const neighborCell of neighborCells) {
-      if (neighborCell.value === newValue) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public resetDisabledMemoValues() {
-    for (const sudokuValue of sudokuValues) {
-      this.setSubCellDisability(sudokuValue, false);
-    }
-  }
-
-  public validateAndUpdateMemoValues() {
-    // for each value, check if it is a valid candidate
-    //   (by checking neighbor cells)
-    //   and update the flag
-    for (const sudokuValue of sudokuValues) {
-      this.setSubCellValidity(sudokuValue, this.validate(sudokuValue));
-    }
-  }
-
-  private isOnlyCandidate(value: SudokuValue): boolean {
-    for (const sudokuValue of sudokuValues) {
-      if (sudokuValue === value) {
-        continue;
-      }
-      if (!this.getSubCellValidity(sudokuValue)) {
-        continue;
-      }
-      if (this.getSubCellDisability(sudokuValue)) {
-        continue;
-      }
-      return false;
-    }
-    return true;
-  }
-
-  public updateUniquenessOfMemoValues() {
-    if (this.cellMode !== "Memo") {
-      return;
-    }
-    for (const sudokuValue of sudokuValues) {
-      // reset uniqueness to be false (default)
-      this.setSubCellUniqueness(sudokuValue, false);
-      if (sudokuValue === EMPTY_VALUE) {
-        // we are only interested in non-empty value
-        continue;
-      }
-      if (!this.getSubCellValidity(sudokuValue)) {
-        // this memo value is no longer applicable
-        continue;
-      }
-      // check if this value is the only candidate in this cell
-      if (this.isOnlyCandidate(sudokuValue)) {
-        this.setSubCellUniqueness(sudokuValue, true);
-      }
-      // check uniqueness with respect to neighbor cells
-      const isUnshared = (neighborCell: Cell): boolean => {
-        if (neighborCell.cellMode !== "Memo") {
-          return true;
-        }
-        if (!neighborCell.getSubCellValidity(sudokuValue)) {
-          return true;
-        }
-        if (neighborCell.getSubCellDisability(sudokuValue)) {
-          return true;
-        }
-        return false;
+    }) as HTMLDivElement;
+    const cells = new Array<Cell>();
+    for (let n = 0; n < BOARD_SIZE * BOARD_SIZE; n++) {
+      const position: Position = {
+        row: Math.floor(n / BOARD_SIZE),
+        column: n % BOARD_SIZE,
       };
-      const neighborCells: NeighborCells = this.getNeighborCells();
-      if (
-        neighborCells.sameRow.every(isUnshared) ||
-        neighborCells.sameColumn.every(isUnshared) ||
-        neighborCells.sameBlock.every(isUnshared)
-      ) {
-        this.setSubCellUniqueness(sudokuValue, true);
+      cells.push(new Cell(element, position));
+    }
+    for (const cell of cells) {
+      const row = cell.position.row;
+      const column = cell.position.column;
+      const value: SudokuValue = puzzle[row][column];
+      if (isEmpty(value)) {
+        cell.cellMode = "Memo";
+      } else {
+        cell.cellMode = "Normal";
+        cell.isDefault = true;
+        cell.value = value;
+      }
+    }
+    for (const cell of cells) {
+      setNeighborCells(cell, cells);
+    }
+    // based on the current normal cell values,
+    //   update all memo cells
+    //   to display all possible values
+    for (const cell of cells) {
+      cell.validateAndUpdateMemoValues();
+    }
+    for (const cell of cells) {
+      cell.updateUniquenessOfMemoValues();
+    }
+    this._cells = cells;
+  }
+
+  public setOnClickHandler(handler: (cellValue: SudokuValue) => void) {
+    const cells: Array<Cell> = this._cells;
+    for (const cell of cells) {
+      cell.setOnClickHandler(handler);
+    }
+  }
+
+  public highlight(highlightedValue: SudokuValue) {
+    const cells: Array<Cell> = this._cells;
+    for (const cell of cells) {
+      switch (cell.cellMode) {
+        case "Normal": {
+          const value: SudokuValue = cell.value;
+          cell.isHighlighted = !isEmpty(value) && highlightedValue === value;
+          break;
+        }
+        case "Memo": {
+          cell.isHighlighted = false;
+          cell.highlightSubCell(highlightedValue);
+          break;
+        }
       }
     }
   }
-}
 
-export function initializeBoard(
-  containerElement: HTMLDivElement,
-  puzzle: ReadonlyArray<ReadonlyArray<SudokuValue>>,
-) {
-  for (let n = 0; n < numberOfCells; n++) {
-    const position: Position = {
-      row: Math.floor(n / BOARD_SIZE),
-      col: n % BOARD_SIZE,
-    };
-    cells.push(new Cell(containerElement, position));
-  }
-  for (const cell of cells) {
-    const value: SudokuValue = puzzle[cell.position.row][cell.position.col];
-    if (isEmpty(value)) {
-      cell.cellMode = "Memo";
-    } else {
-      cell.cellMode = "Normal";
-      cell.isDefault = true;
-      cell.value = value;
-    }
-  }
-  // based on the current normal cell values,
-  // update all memo cells to display all possible values
-  for (const cell of cells) {
-    cell.validateAndUpdateMemoValues();
-  }
-  for (const cell of cells) {
-    cell.updateUniquenessOfMemoValues();
-  }
-}
-
-export function highlightBoard() {
-  const highlightedValue: SudokuValue = getHighlightedValue();
-  for (const cell of cells) {
-    switch (cell.cellMode) {
-      case "Normal": {
-        const value: SudokuValue = cell.value;
-        cell.isHighlighted = !isEmpty(value) && highlightedValue === value;
-        break;
-      }
-      case "Memo": {
-        cell.isHighlighted = false;
-        cell.highlightSubCell(highlightedValue);
-        break;
-      }
-    }
-  }
-}
-
-export function validateAndUpdateValue(value: SudokuValue) {
-  // check if a cell is selected in the first place
-  const selectedCell: Cell | null = getSelectedCell();
-  if (selectedCell === null) {
-    return;
-  }
-  // if we are in the "Init" mode now, all changes are allowed
-  // otherwise input should be validated
-  const currentEditMode: EditMode = getCurrentEditMode();
-  if ("Init" !== currentEditMode) {
-    if (selectedCell.isDefault) {
-      // cannot override default cell, unless the cell is in "edit" mode
+  public validateAndUpdateValue(editModes: EditModes, value: SudokuValue) {
+    const cells = this._cells;
+    // check if a cell is selected in the first place
+    const selectedCell: Cell | null = getSelectedCell(cells);
+    if (selectedCell === null) {
       return;
     }
-    if (!isEmpty(value)) {
-      // trying to assign a non-empty value
-      // need to check if the new value does not violate the sudoku rule
-      if (!selectedCell.validate(value)) {
+    // if we are in the "Init" mode now, all changes are allowed
+    // otherwise input should be validated
+    const currentEditMode: EditMode = editModes.currentMode;
+    if ("Init" !== currentEditMode) {
+      if (selectedCell.isDefault) {
+        // cannot override default cell, unless the cell is in "edit" mode
         return;
       }
-    }
-  }
-  // the assigned value will be fronzen for "Init" mode
-  if ("Init" === currentEditMode) {
-    selectedCell.isDefault = true;
-  } else {
-    selectedCell.isDefault = false;
-  }
-  // update value
-  switch (currentEditMode) {
-    case "Init":
-    case "Normal": {
-      if (currentEditMode === "Init") {
-        for (const cell of cells) {
-          for (const sudokuValue of sudokuValues) {
-            cell.setSubCellDisability(sudokuValue, false);
-          }
+      if (!isEmpty(value)) {
+        // trying to assign a non-empty value
+        // need to check if the new value does not violate the sudoku rule
+        if (!selectedCell.validate(value)) {
+          return;
         }
       }
-      const neighborCells: Array<Cell> = selectedCell
-        .getNeighborCells()
-        .flatten();
-      if (isEmpty(value)) {
-        // erase value and turn it to a memo cell
-        selectedCell.cellMode = "Memo";
-        selectedCell.isDefault = false;
-        const originalValue: SudokuValue = selectedCell.value;
-        selectedCell.value = EMPTY_VALUE;
-        // revive the original value in the related (same row, column, block) memo cells
-        for (const neighborCell of neighborCells) {
-          const isValid: boolean = neighborCell.validate(originalValue);
-          neighborCell.setSubCellValidity(originalValue, isValid);
-        }
-      } else {
-        // turn it to a normal cell
-        selectedCell.cellMode = "Normal";
-        // update normal value
-        selectedCell.value = value;
-        // filter this value in the memo cells
-        //   which are related (same row, column, block)
-        for (const neighborCell of neighborCells) {
-          const isValid = false;
-          neighborCell.setSubCellValidity(value, isValid);
-        }
-      }
-      break;
     }
-    case "Memo": {
+    // the assigned value will be fronzen for "Init" mode
+    if ("Init" === currentEditMode) {
+      selectedCell.isDefault = true;
+    } else {
+      selectedCell.isDefault = false;
+    }
+    // update value
+    if ("Memo" === currentEditMode) {
       selectedCell.cellMode = "Memo";
       selectedCell.value = EMPTY_VALUE;
       if (isEmpty(value)) {
@@ -466,61 +126,112 @@ export function validateAndUpdateValue(value: SudokuValue) {
         const isDisabled: boolean = selectedCell.getSubCellDisability(value);
         selectedCell.setSubCellDisability(value, !isDisabled);
       }
-      break;
+    } else {
+      if (currentEditMode === "Init") {
+        for (const cell of cells) {
+          for (const sudokuValue of SUDOKU_VALUES) {
+            cell.setSubCellDisability(sudokuValue, false);
+          }
+        }
+      }
+      const neighborCells: {
+        sameRow: Array<Cell>;
+        sameColumn: Array<Cell>;
+        sameBlock: Array<Cell>;
+      } = selectedCell.neighborCells;
+      if (isEmpty(value)) {
+        // erase value and turn it to a memo cell
+        selectedCell.cellMode = "Memo";
+        selectedCell.isDefault = false;
+        const originalValue: SudokuValue = selectedCell.value;
+        selectedCell.value = EMPTY_VALUE;
+        // revive the original value in the related (same row, column, block) memo cells
+        for (const neighborCell of [
+          ...neighborCells.sameRow,
+          ...neighborCells.sameColumn,
+          ...neighborCells.sameBlock,
+        ]) {
+          const isValid: boolean = neighborCell.validate(originalValue);
+          neighborCell.setSubCellValidity(originalValue, isValid);
+        }
+      } else {
+        // turn it to a normal cell
+        selectedCell.cellMode = "Normal";
+        // update normal value
+        selectedCell.value = value;
+        // filter this value in the memo cells
+        //   which are related (same row, column, block)
+        for (const neighborCell of [
+          ...neighborCells.sameRow,
+          ...neighborCells.sameColumn,
+          ...neighborCells.sameBlock,
+        ]) {
+          const isValid = false;
+          neighborCell.setSubCellValidity(value, isValid);
+        }
+      }
+    }
+    for (const cell of cells) {
+      cell.validateAndUpdateMemoValues();
+    }
+    for (const cell of cells) {
+      cell.updateUniquenessOfMemoValues();
     }
   }
-  for (const cell of cells) {
-    cell.validateAndUpdateMemoValues();
+
+  public updateSelectedCell(direction: "Down" | "Up" | "Left" | "Right") {
+    const cells = this._cells;
+    const currentSelectedCell: Cell | null = getSelectedCell(cells);
+    if (currentSelectedCell === null) {
+      return;
+    }
+    currentSelectedCell.isSelected = false;
+    const nextSelectedCell: Cell = (function (): Cell {
+      const { row, column } = currentSelectedCell.position;
+      const newRow: number = (function (): number {
+        if (direction === "Up") {
+          return (row - 1 + BOARD_SIZE) % BOARD_SIZE;
+        } else if (direction === "Down") {
+          return (row + 1) % BOARD_SIZE;
+        } else {
+          return row;
+        }
+      })();
+      const newColumn: number = (function (): number {
+        if (direction === "Left") {
+          return (column - 1 + BOARD_SIZE) % BOARD_SIZE;
+        } else if (direction === "Right") {
+          return (column + 1) % BOARD_SIZE;
+        } else {
+          return column;
+        }
+      })();
+      return cells[newRow * BOARD_SIZE + newColumn];
+    })();
+    nextSelectedCell.isSelected = true;
   }
-  for (const cell of cells) {
-    cell.updateUniquenessOfMemoValues();
+
+  public unselect() {
+    const cells = this._cells;
+    for (const cell of cells) {
+      cell.isSelected = false;
+    }
+  }
+
+  public reset() {
+    this.unselect();
+    const cells = this._cells;
+    for (const cell of cells) {
+      cell.reset();
+    }
   }
 }
 
-function getSelectedCell(): Cell | null {
+function getSelectedCell(cells: Array<Cell>): Cell | null {
   for (const cell of cells) {
     if (cell.isSelected) {
       return cell;
     }
   }
   return null;
-}
-
-export function updateSelectedCell(
-  direction: "Down" | "Up" | "Left" | "Right",
-) {
-  const prevSelectedCell: Cell | null = getSelectedCell();
-  if (prevSelectedCell === null) {
-    return;
-  }
-  prevSelectedCell.isSelected = false;
-  const nextSelectedCell: Cell = (function (): Cell {
-    const { row, col } = prevSelectedCell.position;
-    const newRow: number = (function (): number {
-      if (direction === "Up") {
-        return (row - 1 + BOARD_SIZE) % BOARD_SIZE;
-      } else if (direction === "Down") {
-        return (row + 1) % BOARD_SIZE;
-      } else {
-        return row;
-      }
-    })();
-    const newCol: number = (function (): number {
-      if (direction === "Left") {
-        return (col - 1 + BOARD_SIZE) % BOARD_SIZE;
-      } else if (direction === "Right") {
-        return (col + 1) % BOARD_SIZE;
-      } else {
-        return col;
-      }
-    })();
-    return cells[newRow * BOARD_SIZE + newCol];
-  })();
-  nextSelectedCell.isSelected = true;
-}
-
-export function unselectBoard() {
-  for (const cell of cells) {
-    cell.isSelected = false;
-  }
 }
