@@ -35,6 +35,10 @@ footer {
   bottom: 0;
   text-align: center;
   background-color: #000000;
+  padding-block: 0.25rem;
+}
+
+footer > a {
   font-size: var(--medium-font-size);
   color: #ffffff;
 }
