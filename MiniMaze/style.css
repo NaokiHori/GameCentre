@@ -13,7 +13,7 @@
 
 html {
   --global-width: 100vw;
-  --global-height : 100vh;
+  --global-height: 100vh;
   width: var(--global-width);
   height: var(--global-height);
   --size: calc(min(var(--global-width), var(--global-height)));
@@ -44,4 +44,3 @@ footer > div.footer-copyright {
   margin: auto;
   text-align: center;
 }
-

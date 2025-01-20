@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build-maze:
     name: Build maze
     runs-on: ubuntu-latest
@@ -13,23 +12,20 @@ jobs:
         uses: actions/checkout@main
       - name: Setup node
         uses: actions/setup-node@main
-      - name: Install TypeScript
-        run: |
-          npm install -g typescript
-      - name: Build
+      - name: Install dependencies and build
         run: |
           cd MiniMaze
-          mkdir package
-          tsc
-          cp -r \
-            built style.css index.html \
-            package/
+          npm install
+          npx \
+            vite build \
+            --outDir=dist \
+            --base=https://naokihori.github.io/Trash/MiniMaze/
           cd ..
       - name: Upload
         uses: actions/upload-artifact@main
         with:
           name: MiniMaze
-          path: MiniMaze/package
+          path: MiniMaze/dist
 
   build-sudoku:
     name: Build sudoku
@@ -124,4 +120,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@main
-

@@ -12,4 +12,6 @@
 - **Arrow keys (keyboard only)**: Move the selected cell.
 - **R (keyboard only)**: Reset board.
 
+## Color
+
 Bluish colors are used to indicate the value is selected, while reddish colors denote that it is the only applicable value.
