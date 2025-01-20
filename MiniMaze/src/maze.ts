@@ -1,242 +1,107 @@
-let g_board: Array<Array<Cell>>;
-let g_cursor: [number, number];
-let g_path_pts: Array<[number, number]>;
+import { Cell, Direction, BoardSize, Position } from "./maze/types";
+import { Maker } from "./maze/maker";
+import { Player } from "./maze/player";
 
-enum Cell {
-  Wall = 0,
-  Road = 1,
-}
+export class Maze {
+  private _boardSize: BoardSize;
+  private _maker: Maker;
+  private _player: Player;
 
-export enum Dir {
-  Bottom = 0,
-  Top = 1,
-  Left = 2,
-  Right = 3,
-}
+  public constructor(size: { width: number; height: number }) {
+    const boardSize: BoardSize = decideBoardSize(size);
+    const maker = new Maker(boardSize);
+    const player = new Player();
+    this._boardSize = boardSize;
+    this._maker = maker;
+    this._player = player;
+  }
 
-function shuffle<T>(vec: Array<T>) {
-  const nitems: number = vec.length;
-  for (let i: number = nitems - 1; i > 0; i--) {
-    const j: number = Math.floor(Math.random() * (i + 1));
-    [vec[i], vec[j]] = [vec[j], vec[i]];
+  public proceedMakingProcess() {
+    this._maker.updateBoard();
   }
-  return vec;
-}
 
-function can_move_to(
-  board: Array<Array<Cell>>,
-  dir: Dir,
-  at: [number, number],
-): boolean {
-  const h: number = board.length;
-  const w: number = board[0].length;
-  const i: number = at[0];
-  const j: number = at[1];
-  switch (dir) {
-    case Dir.Bottom:
-      if (0 === j) return false;
-      if (Cell.Road === board[j - 2][i]) return false;
-      break;
-    case Dir.Top:
-      if (h - 1 === j) return false;
-      if (Cell.Road === board[j + 2][i]) return false;
-      break;
-    case Dir.Left:
-      if (0 === i) return false;
-      if (Cell.Road === board[j][i - 2]) return false;
-      break;
-    case Dir.Right:
-      if (w - 1 === i) return false;
-      if (Cell.Road === board[j][i + 2]) return false;
-      break;
-    default:
-      throw new Error(`should not reach here`);
+  public isMakingCompleted(): boolean {
+    return this._maker.isCompleted;
   }
-  return true;
-}
 
-function find_next(board: Array<Array<Cell>>): [number, number] | null {
-  const h: number = board.length;
-  const w: number = board[0].length;
-  for (let j = 0; j < h; j += 2) {
-    for (let i = 0; i < w; i += 2) {
-      const cell: Cell = board[j][i];
-      if (Cell.Wall === cell) {
-        continue;
-      }
-      const at: [number, number] = [i, j];
-      if (
-        can_move_to(board, Dir.Bottom, at) ||
-        can_move_to(board, Dir.Top, at) ||
-        can_move_to(board, Dir.Left, at) ||
-        can_move_to(board, Dir.Right, at)
-      ) {
-        return at;
-      }
-    }
-  }
-  return null;
-}
-
-function init_board(board: Array<Array<Cell>>): boolean {
-  const next: [number, number] | null = find_next(board);
-  if (!next) {
-    return false;
-  }
-  let i: number = next[0];
-  let j: number = next[1];
-  random_walk: for (;;) {
-    const dirs: Array<Dir> = shuffle<Dir>([
-      Dir.Left,
-      Dir.Right,
-      Dir.Bottom,
-      Dir.Top,
-    ]);
-    for (const dir of dirs) {
-      if (can_move_to(board, dir, [i, j])) {
-        switch (dir) {
-          case Dir.Bottom:
-            board[j - 1][i] = Cell.Road;
-            board[j - 2][i] = Cell.Road;
-            j -= 2;
-            break;
-          case Dir.Top:
-            board[j + 1][i] = Cell.Road;
-            board[j + 2][i] = Cell.Road;
-            j += 2;
-            break;
-          case Dir.Left:
-            board[j][i - 1] = Cell.Road;
-            board[j][i - 2] = Cell.Road;
-            i -= 2;
-            break;
-          case Dir.Right:
-            board[j][i + 1] = Cell.Road;
-            board[j][i + 2] = Cell.Road;
-            i += 2;
-            break;
-          default:
-            throw new Error(`should not reach here`);
-        }
-        continue random_walk;
-      }
-    }
-    break random_walk;
-  }
-  return true;
-}
-
-export function maze_init(board_size: [number, number]): void {
-  function decide_board_size(size: [number, number]): [number, number] {
-    let w: number = size[0];
-    let h: number = size[1];
-    w = w < 1 ? 1 : w;
-    h = h < 1 ? 1 : h;
-    return [2 * w + 1, 2 * h + 1];
-  }
-  const [w, h]: [number, number] = decide_board_size(board_size);
-  const board: Array<Array<Cell>> = [];
-  for (let j = 0; j < h; j++) {
-    const row: Array<Cell> = [];
-    for (let i = 0; i < w; i++) {
-      const val: Cell = 0 === i && 0 === j ? Cell.Road : Cell.Wall;
-      row.push(val);
-    }
-    board.push(row);
-  }
-  for (;;) {
-    const flag = init_board(board);
-    if (!flag) {
-      break;
-    }
-  }
-  g_board = board;
-  g_cursor = [0, 0];
-  g_cursor[0] = 0;
-  g_cursor[1] = 0;
-  g_path_pts = [];
-  g_path_pts.push([g_cursor[0], g_cursor[1]]);
-}
-
-export function maze_move_cursor(dir: Dir): void {
-  const h: number = g_board.length;
-  const w: number = g_board[0].length;
-  const i: number = g_cursor[0];
-  const j: number = g_cursor[1];
-  const delta: [number, number] = [0, 0];
-  switch (dir) {
-    case Dir.Bottom:
-      if (0 === j) return;
-      if (Cell.Wall === g_board[j - 1][i]) return;
-      delta[1] -= 1;
-      break;
-    case Dir.Top:
-      if (h - 1 === j) return;
-      if (Cell.Wall === g_board[j + 1][i]) return;
-      delta[1] += 1;
-      break;
-    case Dir.Left:
-      if (0 === i) return;
-      if (Cell.Wall === g_board[j][i - 1]) return;
-      delta[0] -= 1;
-      break;
-    case Dir.Right:
-      if (w - 1 === i) return;
-      if (Cell.Wall === g_board[j][i + 1]) return;
-      delta[0] += 1;
-      break;
-    default:
-      throw new Error(`should not reach here`);
-  }
-  g_cursor[0] += delta[0];
-  g_cursor[1] += delta[1];
-  if (w - 1 === g_cursor[0] && h - 1 === g_cursor[1]) {
-    maze_init([w, h]);
-    return;
-  }
-  // update path
-  const nitems: number = g_path_pts.length;
-  if (1 < nitems) {
-    const last: [number, number] = g_path_pts[nitems - 2];
-    if (last[0] === g_cursor[0] && last[1] === g_cursor[1]) {
-      g_path_pts.pop();
+  public moveCursor(direction: Direction) {
+    if (!this.isMakingCompleted()) {
+      console.log("Cannot play it until the making process has been completed");
       return;
     }
+    const boardSize: BoardSize = this._boardSize;
+    const board: ReadonlyArray<ReadonlyArray<Cell>> = this._maker.board;
+    this._player.moveCursor(direction, boardSize, board);
   }
-  g_path_pts.push([g_cursor[0], g_cursor[1]]);
-}
 
-export function maze_draw(
-  context: CanvasRenderingContext2D,
-  screen_size: [number, number],
-): void {
-  const board: Array<Array<Cell>> = g_board;
-  const h: number = board.length;
-  const w: number = board[0].length;
-  const dx: number = screen_size[0] / w;
-  const dy: number = screen_size[1] / h;
-  // maze
-  context.fillStyle = `#ffffff`;
-  for (let j = 0; j < h; j++) {
-    for (let i = 0; i < w; i++) {
-      if (Cell.Road === board[j][i]) {
-        context.fillRect(i * dx, j * dy, dx, dy);
+  public draw(ctx: CanvasRenderingContext2D, screenSize: [number, number]) {
+    const N_HALO = 1;
+    const board: ReadonlyArray<ReadonlyArray<Cell>> = this._maker.board;
+    const cursor: Position = this._player.cursor;
+    const trajectory: ReadonlyArray<Position> = this._player.trajectory;
+    const boardWidth: number = this._boardSize.width;
+    const boardHeight: number = this._boardSize.height;
+    const dx: number = screenSize[0] / (boardWidth + 2 * N_HALO);
+    const dy: number = screenSize[1] / (boardHeight + 2 * N_HALO);
+    // maze
+    for (let j = 0; j < boardHeight; j++) {
+      for (let i = 0; i < boardWidth; i++) {
+        if ("ROAD" === board[j][i]) {
+          ctx.fillStyle = getColor({ x: i, y: j }, this._boardSize);
+          ctx.fillRect((i + N_HALO) * dx, (j + N_HALO) * dy, dx, dy);
+        }
       }
     }
+    // trajectory
+    if (this.isMakingCompleted()) {
+      ctx.fillStyle = "#ffffff";
+      for (const point of trajectory) {
+        ctx.fillRect((point.x + N_HALO) * dx, (point.y + N_HALO) * dy, dx, dy);
+      }
+    }
+    // cursor
+    if (this.isMakingCompleted()) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect((cursor.x + N_HALO) * dx, (cursor.y + N_HALO) * dy, dx, dy);
+    }
+    // start and goal
+    if (this.isMakingCompleted()) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect((0 + N_HALO) * dx, (0 + N_HALO) * dy, dx, dy);
+      ctx.fillRect(
+        (boardWidth - 1 + N_HALO) * dx,
+        (boardHeight - 1 + N_HALO) * dy,
+        dx,
+        dy,
+      );
+    }
   }
-  // cursor, start, goal
-  context.fillStyle = `#ff0000`;
-  context.strokeStyle = `#ff0000`;
-  context.fillRect(g_cursor[0] * dx, g_cursor[1] * dy, dx, dy);
-  context.strokeRect(0 * dx, 0 * dy, dx, dy);
-  context.strokeRect((w - 1) * dx, (h - 1) * dy, dx, dy);
-  // path
-  context.beginPath();
-  context.moveTo(0.5 * dx, 0.5 * dx);
-  for (const pt of g_path_pts) {
-    const i: number = pt[0];
-    const j: number = pt[1];
-    context.lineTo((0.5 + i) * dx, (0.5 + j) * dy);
-  }
-  context.stroke();
+}
+
+function decideBoardSize(size: { width: number; height: number }): BoardSize {
+  const width: number = Math.max(1, Math.floor(size.width));
+  const height: number = Math.max(1, Math.floor(size.height));
+  return {
+    width: 2 * width + 1,
+    height: 2 * height + 1,
+  };
+}
+
+function getColor(position: Position, boardSize: BoardSize): string {
+  const radiusVector: Position = {
+    x: position.x + 0.5 - 0.5 * boardSize.width,
+    y: position.y + 0.5 - 0.5 * boardSize.height,
+  };
+  const angleInRadian = Math.atan2(radiusVector.y, radiusVector.x);
+  const angleInDegree = Math.floor((180 / Math.PI) * (Math.PI + angleInRadian));
+  const magnitude = Math.sqrt(
+    Math.pow(radiusVector.x, 2) + Math.pow(radiusVector.y, 2),
+  );
+  const maxMagnitude = Math.sqrt(
+    Math.pow(0.5 * boardSize.width, 2) + Math.pow(0.5 * boardSize.height, 2),
+  );
+  const hue = angleInDegree;
+  const saturation = 25 + 75 * (magnitude / maxMagnitude);
+  const lightness = 75 - 50 * (magnitude / maxMagnitude);
+  return `hsl(${hue.toString()}deg ${saturation.toString()}% ${lightness.toString()}%)`;
 }
