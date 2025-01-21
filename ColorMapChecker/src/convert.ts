@@ -60,3 +60,28 @@ export function rgbToHsv(
   const v = max;
   return [h, s, v];
 }
+
+export function hslToRgb(
+  hsl: [number, number, number],
+): [number, number, number] {
+  const h = hsl[0];
+  const s = hsl[1];
+  const l = hsl[2];
+  const min =
+    l < 50 ? 2.55 * (l - l * (s / 100)) : 2.55 * (l - (100 - l) * (s / 100));
+  const max =
+    l < 50 ? 2.55 * (l + l * (s / 100)) : 2.55 * (l + (100 - l) * (s / 100));
+  if (h < 60) {
+    return [max, (h / 60) * (max - min) + min, min];
+  } else if (h < 120) {
+    return [((120 - h) / 60) * (max - min) + min, max, min];
+  } else if (h < 180) {
+    return [min, max, ((h - 120) / 60) * (max - min) + min];
+  } else if (h < 240) {
+    return [min, ((240 - h) / 60) * (max - min) + min, max];
+  } else if (h < 300) {
+    return [((h - 240) / 60) * (max - min) + min, min, max];
+  } else {
+    return [max, min, ((360 - h) / 60) * (max - min) + min];
+  }
+}

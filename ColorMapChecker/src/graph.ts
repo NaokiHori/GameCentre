@@ -129,7 +129,7 @@ function drawLine(
   lineColor: string,
   marginX: [number, number],
   marginY: [number, number],
-  points: Coordinate[],
+  points: Array<Coordinate>,
 ) {
   ctx.lineWidth = lineWidth;
   ctx.strokeStyle = lineColor;

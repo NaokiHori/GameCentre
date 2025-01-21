@@ -26,21 +26,25 @@ body {
   flex-basis: 0;
 }
 
-#arrow-keys {
+#button-container {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: center;
-  column-gap: 1rem;
+  column-gap: 1dvw;
 }
 
-button.arrow-key {
-  flex-grow: 1;
-  flex-shrink: 1;
+#button-container > button {
+  flex-grow: 0;
+  flex-shrink: 0;
   flex-basis: auto;
-  max-width: 5rem;
   font-family: "Courier New";
-  font-size: xx-large;
+  font-size: medium;
+}
+
+#solve-button {
+  background-color: #ffffff;
+  font-weight: bold;
 }
 
 footer {

@@ -1,4 +1,4 @@
-export type Cell = "WALL" | "ROAD";
+export type Cell = "WALL" | "ROAD" | "DEADEND";
 export type Direction = "DOWN" | "UP" | "LEFT" | "RIGHT";
 
 export interface BoardSize {

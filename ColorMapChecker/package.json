@@ -5,13 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "check": "prettier . --write && tsc && eslint --cache --fix",
+    "check": "tsc",
     "dev": "vite"
   },
   "devDependencies": {
-    "prettier": "^3.4.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.19.1",
-    "vite": "^6.0.7"
+    "vite": "^6.0.11"
   }
 }

@@ -6,7 +6,7 @@ export interface Formula {
 }
 
 // ref: Gnuplot, "show palette rgbformulae"
-export const FORMULAE: Formula[] = [
+export const FORMULAE: Array<Formula> = [
   {
     label: "0",
     equation: () => 0,

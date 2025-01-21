@@ -1,80 +1,83 @@
 import { Cell, Direction, BoardSize, Position } from "./maze/types";
 import { Maker } from "./maze/maker";
 import { Player } from "./maze/player";
+import { Solver } from "./maze/solver";
+import { Drawer } from "./maze/drawer";
 
 export class Maze {
-  private _boardSize: BoardSize;
+  private _boardSize: Readonly<BoardSize>;
   private _maker: Maker;
   private _player: Player;
+  private _solver: Solver;
+  private _drawer: Drawer;
+  private _start: Readonly<Position>;
+  private _goal: Readonly<Position>;
 
   public constructor(size: { width: number; height: number }) {
     const boardSize: BoardSize = decideBoardSize(size);
     const maker = new Maker(boardSize);
     const player = new Player();
+    const solver = new Solver();
+    const drawer = new Drawer();
     this._boardSize = boardSize;
     this._maker = maker;
     this._player = player;
+    this._solver = solver;
+    this._drawer = drawer;
+    this._start = { x: 0, y: 0 };
+    this._goal = { x: boardSize.width - 1, y: boardSize.height - 1 };
   }
 
-  public proceedMakingProcess() {
-    this._maker.updateBoard();
+  public make(): { isCompleted: boolean } {
+    return this._maker.updateBoard();
   }
 
-  public isMakingCompleted(): boolean {
-    return this._maker.isCompleted;
+  public solve(): { isCompleted: boolean } {
+    return this._solver.solve(
+      this._boardSize,
+      this._maker.board,
+      this._start,
+      this._goal,
+    );
   }
 
   public moveCursor(direction: Direction) {
-    if (!this.isMakingCompleted()) {
+    if (!this.completeMaking()) {
       console.log("Cannot play it until the making process has been completed");
       return;
     }
-    const boardSize: BoardSize = this._boardSize;
+    if (this._solver.isInvoked) {
+      console.log("Solver has been invoked; cursor movements are not allowed");
+      return;
+    }
+    const boardSize: Readonly<BoardSize> = this._boardSize;
     const board: ReadonlyArray<ReadonlyArray<Cell>> = this._maker.board;
     this._player.moveCursor(direction, boardSize, board);
   }
 
   public draw(ctx: CanvasRenderingContext2D, screenSize: [number, number]) {
-    const N_HALO = 1;
+    const completeMaking: boolean = this.completeMaking();
+    const isSolverInvoked: boolean = this._solver.isInvoked;
+    const boardSize: BoardSize = this._boardSize;
     const board: ReadonlyArray<ReadonlyArray<Cell>> = this._maker.board;
     const cursor: Position = this._player.cursor;
     const trajectory: ReadonlyArray<Position> = this._player.trajectory;
-    const boardWidth: number = this._boardSize.width;
-    const boardHeight: number = this._boardSize.height;
-    const dx: number = screenSize[0] / (boardWidth + 2 * N_HALO);
-    const dy: number = screenSize[1] / (boardHeight + 2 * N_HALO);
-    // maze
-    for (let j = 0; j < boardHeight; j++) {
-      for (let i = 0; i < boardWidth; i++) {
-        if ("ROAD" === board[j][i]) {
-          ctx.fillStyle = getColor({ x: i, y: j }, this._boardSize);
-          ctx.fillRect((i + N_HALO) * dx, (j + N_HALO) * dy, dx, dy);
-        }
-      }
-    }
-    // trajectory
-    if (this.isMakingCompleted()) {
-      ctx.fillStyle = "#ffffff";
-      for (const point of trajectory) {
-        ctx.fillRect((point.x + N_HALO) * dx, (point.y + N_HALO) * dy, dx, dy);
-      }
-    }
-    // cursor
-    if (this.isMakingCompleted()) {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect((cursor.x + N_HALO) * dx, (cursor.y + N_HALO) * dy, dx, dy);
-    }
-    // start and goal
-    if (this.isMakingCompleted()) {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect((0 + N_HALO) * dx, (0 + N_HALO) * dy, dx, dy);
-      ctx.fillRect(
-        (boardWidth - 1 + N_HALO) * dx,
-        (boardHeight - 1 + N_HALO) * dy,
-        dx,
-        dy,
-      );
-    }
+    this._drawer.draw(
+      ctx,
+      screenSize,
+      completeMaking,
+      isSolverInvoked,
+      boardSize,
+      board,
+      cursor,
+      trajectory,
+      this._start,
+      this._goal,
+    );
+  }
+
+  private completeMaking(): boolean {
+    return this._maker.isCompleted;
   }
 }
 
@@ -85,23 +88,4 @@ function decideBoardSize(size: { width: number; height: number }): BoardSize {
     width: 2 * width + 1,
     height: 2 * height + 1,
   };
-}
-
-function getColor(position: Position, boardSize: BoardSize): string {
-  const radiusVector: Position = {
-    x: position.x + 0.5 - 0.5 * boardSize.width,
-    y: position.y + 0.5 - 0.5 * boardSize.height,
-  };
-  const angleInRadian = Math.atan2(radiusVector.y, radiusVector.x);
-  const angleInDegree = Math.floor((180 / Math.PI) * (Math.PI + angleInRadian));
-  const magnitude = Math.sqrt(
-    Math.pow(radiusVector.x, 2) + Math.pow(radiusVector.y, 2),
-  );
-  const maxMagnitude = Math.sqrt(
-    Math.pow(0.5 * boardSize.width, 2) + Math.pow(0.5 * boardSize.height, 2),
-  );
-  const hue = angleInDegree;
-  const saturation = 25 + 75 * (magnitude / maxMagnitude);
-  const lightness = 75 - 50 * (magnitude / maxMagnitude);
-  return `hsl(${hue.toString()}deg ${saturation.toString()}% ${lightness.toString()}%)`;
 }
