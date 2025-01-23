@@ -28,6 +28,8 @@ export function hsvToRgb(
   }
 }
 
+// convert RGB value [0:1] to HSV value [0:1]
+// ref: https://github.com/python/cpython/blob/3.11/Lib/colorsys.py
 export function rgbToHsv(
   rgb: [number, number, number],
 ): [number, number, number] {
@@ -61,27 +63,27 @@ export function rgbToHsv(
   return [h, s, v];
 }
 
+// convert HSL value [0:1] to RGB value [0:1]
+// https://www.peko-step.com/tool/hslrgb.html#google_vignette
 export function hslToRgb(
   hsl: [number, number, number],
 ): [number, number, number] {
   const h = hsl[0];
   const s = hsl[1];
   const l = hsl[2];
-  const min =
-    l < 50 ? 2.55 * (l - l * (s / 100)) : 2.55 * (l - (100 - l) * (s / 100));
-  const max =
-    l < 50 ? 2.55 * (l + l * (s / 100)) : 2.55 * (l + (100 - l) * (s / 100));
-  if (h < 60) {
-    return [max, (h / 60) * (max - min) + min, min];
-  } else if (h < 120) {
-    return [((120 - h) / 60) * (max - min) + min, max, min];
-  } else if (h < 180) {
-    return [min, max, ((h - 120) / 60) * (max - min) + min];
-  } else if (h < 240) {
-    return [min, ((240 - h) / 60) * (max - min) + min, max];
-  } else if (h < 300) {
-    return [((h - 240) / 60) * (max - min) + min, min, max];
+  const min = l < 0.5 ? l - l * s : l - (1 - l) * s;
+  const max = l < 0.5 ? l + l * s : l + (1 - l) * s;
+  if (h < 1 / 6) {
+    return [max, h * (max - min) + min, min];
+  } else if (h < 2 / 6) {
+    return [(2 / 6 - h) * (max - min) + min, max, min];
+  } else if (h < 3 / 6) {
+    return [min, max, (h - 2 / 6) * (max - min) + min];
+  } else if (h < 4 / 6) {
+    return [min, (4 / 6 - h) * (max - min) + min, max];
+  } else if (h < 5 / 6) {
+    return [(h - 4 / 6) * (max - min) + min, min, max];
   } else {
-    return [max, min, ((360 - h) / 60) * (max - min) + min];
+    return [max, min, (1 - h) * (max - min) + min];
   }
 }
