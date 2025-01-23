@@ -51,7 +51,7 @@ export function rgbToHsv(
     }
   })();
   const s = (function () {
-    if (0 === max) {
+    if (0 !== max) {
       return (max - min) / max;
     } else {
       return 0;
